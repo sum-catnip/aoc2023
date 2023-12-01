@@ -7,21 +7,14 @@ int sum = 0;
 int LookupNum(string num) => Array.IndexOf(mapping, num) % 9 + 1;
 while (reader.ReadLine() is string line)
 {
-    // i could deduplicate this linq by parametrizing the IndexOf func
-    // but the code is already complicated enough as-is
-    var (_, first) = mapping
+    var sorted = mapping
         .Select(num => (index: line.IndexOf(num), number: LookupNum(num)))
+        .Concat(mapping.Select(num => (index: line.LastIndexOf(num), number: LookupNum(num))))
         .Where(pair => pair.index > -1)
         .OrderBy(pair => pair.index)
-        .First();
+        .ToArray();
 
-    var (_, last) = mapping
-        .Select(num => (index: line.LastIndexOf(num), number: LookupNum(num)))
-        .Where(pair => pair.index > -1)
-        .OrderBy(pair => pair.index)
-        .Last();
-
-    sum += int.Parse($"{first}{last}");
+    sum += int.Parse($"{sorted.First().number}{sorted.Last().number}");
 }
 
 Console.WriteLine(sum);
