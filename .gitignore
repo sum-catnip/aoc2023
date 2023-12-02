@@ -132,3 +132,13 @@ $RECYCLE.BIN/
 .DS_Store
 
 _NCrunch*
+
+
+
+zig-cache/
+zig-out/
+/release/
+/debug/
+/build/
+/build-*/
+/docgen_tmp/
