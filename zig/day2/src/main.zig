@@ -48,10 +48,8 @@ fn parseSet(cursor: *[]u8, alloc: std.mem.Allocator) Cubeset {
             advance(cursor, 2);
         }
         const count = parseNum(cursor);
-        std.log.debug("count: {}", .{count});
         advance(cursor, 1); // skip whitespace
         const color = parseWord(cursor);
-        std.log.debug("color: {s}", .{color});
         const c = switch (std.meta.stringToEnum(ColorsEnum, color) orelse continue) {
             .red => Colors{ .red = count },
             .green => Colors{ .green = count },
@@ -68,7 +66,6 @@ fn parseGame(line: []u8, alloc: std.mem.Allocator) !Game {
     // remove Game part
     advance(&cursor, 5);
     const id = parseNum(&cursor);
-    std.log.debug("id: {}", .{id});
 
     // skip :
     advance(&cursor, 2);
@@ -93,7 +90,6 @@ fn possibleSet(set: *const Cubeset, maxr: u32, maxg: u32, maxb: u32) bool {
             .red => |r| maxr >= r,
             .blue => |b| maxb >= b,
         };
-        std.log.info("color: {}", .{color});
         if (!possible) {
             return false;
         }
@@ -108,6 +104,29 @@ fn possibleGame(game: *const Game, maxr: u32, maxg: u32, maxb: u32) bool {
         }
     }
     return true;
+}
+
+fn calcPower(game: *const Game) u32 {
+    var highestr: u32 = 0;
+    var highestg: u32 = 0;
+    var highestb: u32 = 0;
+    for (game.sets.items) |s| {
+        for (s.set.items) |c| {
+            switch (c) {
+                .green => |g| if (g > highestg) {
+                    highestg = g;
+                },
+                .red => |r| if (r > highestr) {
+                    highestr = r;
+                },
+                .blue => |b| if (b > highestb) {
+                    highestb = b;
+                },
+            }
+        }
+    }
+
+    return highestr * highestg * highestb;
 }
 
 pub fn main() !void {
@@ -127,13 +146,17 @@ pub fn main() !void {
     const blues = 14;
 
     var possible: u32 = 0;
+    var part2: u32 = 0;
 
     while (try stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         const game = try parseGame(line, alloc);
         if (possibleGame(&game, reds, greens, blues)) {
             possible += game.id;
         }
+
+        part2 += calcPower(&game);
     }
 
     std.log.info("solution: {}", .{possible});
+    std.log.info("part2: {}", .{part2});
 }
